@@ -1,17 +1,18 @@
 package com.gregtechceu.gtceu.forge;
 
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.item.DrumMachineItem;
 import com.gregtechceu.gtceu.api.item.forge.ComponentItemImpl;
 import com.gregtechceu.gtceu.api.item.forge.DrumMachineItemImpl;
 import com.gregtechceu.gtceu.api.machine.feature.IInteractedMachine;
 import com.gregtechceu.gtceu.api.block.MetaMachineBlock;
+import com.gregtechceu.gtceu.common.ServerCommands;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -60,6 +61,11 @@ public class ForgeCommonEventListener {
                 event.setCanceled(true);
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void registerCommand(RegisterCommandsEvent event) {
+        ServerCommands.createServerCommands().forEach(event.getDispatcher()::register);
     }
 
 }

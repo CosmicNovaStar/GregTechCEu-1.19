@@ -38,8 +38,8 @@ public class FluidPipeBlockEntityImpl extends FluidPipeBlockEntity{
 
     public static void onBlockEntityRegister(BlockEntityType<FluidPipeBlockEntity> type) {
         FluidStorage.SIDED.registerForBlockEntity((blockEntity, direction) -> {
-            var fluidTransfer = blockEntity.getFluidHandler(direction);
-            return new Storage<FluidVariant>(){
+            final var fluidTransfer = blockEntity.getFluidHandler(direction);
+            return fluidTransfer == null ? null : new Storage<FluidVariant>() {
 
                 @Override
                 public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {

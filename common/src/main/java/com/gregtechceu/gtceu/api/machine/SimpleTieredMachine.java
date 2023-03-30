@@ -28,6 +28,7 @@ import com.lowdragmc.lowdraglib.syncdata.ISubscription;
 import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
+import com.lowdragmc.lowdraglib.utils.Position;
 import com.mojang.blaze3d.MethodsReturnNonnullByDefault;
 import it.unimi.dsi.fastutil.ints.Int2LongFunction;
 import lombok.Getter;
@@ -314,18 +315,18 @@ public class SimpleTieredMachine extends WorkableTieredMachine implements IAutoO
     //////////////////////////////////////
     @Override
     public ModularUI createUI(Player entityPlayer) {
-        int yOffset = 0;
-        if (recipeType.getMaxInputs(ItemRecipeCapability.CAP) >= 6 || recipeType.getMaxInputs(FluidRecipeCapability.CAP) >= 6 || recipeType.getMaxOutputs(ItemRecipeCapability.CAP) >= 6 || recipeType.getMaxOutputs(FluidRecipeCapability.CAP) >= 6) {
-            yOffset = 9;
-        }
+        var group = recipeType.createUITemplate(recipeLogic::getProgressPercent, importItems.storage, exportItems.storage, importFluids.storages, exportFluids.storages);
+        var size = group.getSize();
+        var yOffset = 2 + size.height - 40;
+        group.setSelfPosition(new Position((176 - size.width) / 2, 20));
         var modularUI = new ModularUI(176, 166 + yOffset, this, entityPlayer)
                 .background(GuiTextures.BACKGROUND)
-                .widget(recipeType.createUITemplate(recipeLogic::getProgressPercent, importItems.storage, exportItems.storage, importFluids.storages, exportFluids.storages))
+                .widget(group)
                 .widget(new LabelWidget(5, 5, getBlockState().getBlock().getDescriptionId()))
                 .widget(new SlotWidget(chargerInventory, 0, 79, 62 + yOffset, true, true)
                         .setBackground(GuiTextures.SLOT, GuiTextures.CHARGER_OVERLAY)
                         .setHoverTooltips(LangHandler.getMultiLang("gtceu.gui.charger_slot.tooltip", GTValues.VNF[getTier()], GTValues.VNF[getTier()])))
-                .widget(new PredicatedImageWidget(79, 42 + yOffset, 18, 18, new ResourceTexture("gtceu:textures/gui/base/indicator_no_energy.png"))
+                .widget(new PredicatedImageWidget(79, (size.height - 18) / 2 + 20, 18, 18, new ResourceTexture("gtceu:textures/gui/base/indicator_no_energy.png"))
                         .setPredicate(recipeLogic::isHasNotEnoughEnergy))
                 .widget(UITemplate.bindPlayerInventory(entityPlayer.getInventory(), GuiTextures.SLOT, 7, 84 + yOffset, true));
 
