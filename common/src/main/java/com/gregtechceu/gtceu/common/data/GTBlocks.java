@@ -8,7 +8,7 @@ import com.gregtechceu.gtceu.api.block.*;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.item.MaterialPipeBlockItem;
 import com.gregtechceu.gtceu.api.item.RendererBlockItem;
-import com.gregtechceu.gtceu.api.tag.TagUtil;
+import com.gregtechceu.gtceu.api.data.tag.TagUtil;
 import com.gregtechceu.gtceu.client.renderer.block.CTMModelRenderer;
 import com.gregtechceu.gtceu.client.renderer.block.OreBlockRenderer;
 import com.gregtechceu.gtceu.client.renderer.block.TextureOverrideRenderer;
@@ -19,9 +19,11 @@ import com.gregtechceu.gtceu.api.data.chemical.material.properties.PropertyKey;
 import com.gregtechceu.gtceu.api.item.MaterialBlockItem;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
-import com.gregtechceu.gtceu.api.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.common.pipelike.cable.Insulation;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
+import com.lowdragmc.lowdraglib.LDLib;
+import com.lowdragmc.lowdraglib.client.renderer.IRenderer;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
@@ -30,10 +32,10 @@ import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
-import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -42,12 +44,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.FoliageColor;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.grower.AbstractTreeGrower;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.material.MaterialColor;
 import net.minecraft.world.level.storage.loot.LootPool;
@@ -56,6 +60,7 @@ import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 
@@ -125,26 +130,20 @@ public class GTBlocks {
 
             // Ore Block
             if (material.hasProperty(PropertyKey.ORE)) {
+                var oreProperty = material.getProperty(PropertyKey.ORE);
                 for (var ore : TagPrefix.ORES.entrySet()) {
                     var oreTag = ore.getKey();
-                    var oreProperty = material.getProperty(PropertyKey.ORE);
                     var entry = REGISTRATE.block("%s_%s".formatted(FormattingUtil.toLowerCaseUnder(oreTag.name), material.getName()),
-                                    properties -> new MaterialBlock(properties, oreTag, material, new OreBlockRenderer(ore.getValue(),
+                                    properties -> new MaterialBlock(properties, oreTag, material, LDLib.isClient() ? new OreBlockRenderer(ore.getValue(),
                                             Objects.requireNonNull(oreTag.materialIconType()).getBlockTexturePath(material.getMaterialIconSet()),
-                                            oreProperty.isEmissive())))
+                                            oreProperty.isEmissive()) : IRenderer.EMPTY))
                             .initialProperties(() -> Blocks.IRON_BLOCK)
-                            .properties(BlockBehaviour.Properties::noOcclusion)
                             .transform(unificationBlock(oreTag, material))
                             .addLayer(() -> RenderType::cutoutMipped)
                             .blockstate(NonNullBiConsumer.noop())
                             .setData(ProviderType.LANG, NonNullBiConsumer.noop())
                             .tag(BlockTags.MINEABLE_WITH_PICKAXE)
                             .color(() -> () -> MaterialBlock::tintedColor)
-                            // TODO whether we need loot for drops?
-//                            .loot((lt, b) -> lt.add(b,
-//                                    RegistrateBlockLootTables.createSilkTouchDispatchTable(b,
-//                                            RegistrateBlockLootTables.applyExplosionDecay(b, LootItem.lootTableItem(GTItems.MATERIAL_ITEMS.get(TagPrefix.dust, material).get())
-//                                                    .apply(ApplyBonusCount.addOreBonusCount(Enchantments.BLOCK_FORTUNE))))))
                             .item(MaterialBlockItem::new)
                             .model(NonNullBiConsumer.noop())
                             .color(() -> () -> MaterialBlockItem::tintColor)
@@ -412,15 +411,15 @@ public class GTBlocks {
     }
 
     private static BlockEntry<ActiveBlock> createFireboxCasing(BoilerFireboxType type) {
-        BlockEntry<ActiveBlock> block = REGISTRATE.block(type.getName(), p -> new ActiveBlock(p,
+        BlockEntry<ActiveBlock> block = REGISTRATE.block(type.name(), p -> new ActiveBlock(p,
                         new TextureOverrideRenderer(new ResourceLocation("block/cube_bottom_top"),
-                                Map.of("bottom", type.getBottom(),
-                                        "top", type.getTop(),
-                                        "side", type.getSide())),
+                                Map.of("bottom", type.bottom(),
+                                        "top", type.top(),
+                                        "side", type.side())),
                         new TextureOverrideRenderer(GTCEu.id("block/fire_box_active"),
-                                Map.of("bottom", type.getBottom(),
-                                        "top", type.getTop(),
-                                        "side", type.getSide()))))
+                                Map.of("bottom", type.bottom(),
+                                        "top", type.top(),
+                                        "side", type.side()))))
                 .initialProperties(() -> Blocks.IRON_BLOCK)
                 .addLayer(() -> RenderType::cutoutMipped)
                 .blockstate(NonNullBiConsumer.noop())
@@ -474,13 +473,12 @@ public class GTBlocks {
     // Fortune Level
     public static final float[] RUBBER_LEAVES_DROPPING_CHANCE = new float[]{0.05F, 0.0625F, 0.083333336F, 0.1F};
 
-    public static Supplier<BlockColor> leavesBlockColor() {
-        return () -> (state, reader, pos, tintIndex) -> {
-            if (reader != null && pos != null) {
-                return BiomeColors.getAverageFoliageColor(reader, pos);
-            }
-            return FoliageColor.getDefaultColor();
-        };
+    public static int leavesBlockColor(BlockState state, @Nullable BlockAndTintGetter reader, @Nullable BlockPos pos, int tintIndex) {
+        if (reader != null && pos != null) {
+            //return reader.getBlockTint(pos, (biome, x, z) -> biome.getFoliageColor());
+            return BiomeColors.getAverageFoliageColor(reader, pos);
+        }
+        return FoliageColor.getDefaultColor();
     }
 
     public static Supplier<ItemColor> leavesItemColor() {
@@ -493,7 +491,7 @@ public class GTBlocks {
             .blockstate((ctx, prov) -> prov.simpleBlock(ctx.getEntry(), prov.models().singleTexture(Registry.BLOCK.getKey(ctx.getEntry()).getPath(), prov.mcLoc(BLOCK_FOLDER + "/leaves"), "all", prov.blockTexture(ctx.getEntry()))))
             .loot((table, block) -> table.add(block, RegistrateBlockLootTables.createLeavesDrops(block, GTBlocks.RUBBER_SAPLING.get(), RUBBER_LEAVES_DROPPING_CHANCE)))
             .tag(BlockTags.LEAVES)
-            .color(GTBlocks::leavesBlockColor)
+            .color(() -> () -> GTBlocks::leavesBlockColor)
             .item()
             .color(GTBlocks::leavesItemColor)
             .tag(ItemTags.LEAVES)

@@ -3,8 +3,7 @@ package com.gregtechceu.gtceu.data.recipe.builder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.gregtechceu.gtceu.GTCEu;
-import com.gregtechceu.gtceu.api.capability.recipe.ItemRecipeCapability;
-import com.gregtechceu.gtceu.api.capability.recipe.RecipeCapability;
+import com.gregtechceu.gtceu.api.capability.recipe.*;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.chemical.material.stack.UnificationEntry;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
@@ -12,15 +11,13 @@ import com.gregtechceu.gtceu.api.machine.multiblock.CleanroomType;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeSerializer;
 import com.gregtechceu.gtceu.common.item.IntCircuitBehaviour;
 import com.gregtechceu.gtceu.common.recipe.*;
-import com.gregtechceu.gtceu.api.capability.recipe.EURecipeCapability;
-import com.gregtechceu.gtceu.api.capability.recipe.FluidRecipeCapability;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.recipe.RecipeCondition;
 import com.gregtechceu.gtceu.api.recipe.content.Content;
 import com.gregtechceu.gtceu.api.recipe.ingredient.SizedIngredient;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
-import com.gregtechceu.gtceu.api.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.lowdragmc.lowdraglib.LDLib;
 import com.lowdragmc.lowdraglib.side.fluid.FluidStack;
 import com.lowdragmc.lowdraglib.utils.NBTToJsonConverter;
@@ -225,8 +222,12 @@ public class GTRecipeBuilder {
         return inputItems(input.tagPrefix, input.material, count);
     }
 
-    public GTRecipeBuilder inputItems(TagPrefix orePrefix, @Nullable  Material material, int count) {
-        return inputItems(ChemicalHelper.getTag(orePrefix, material), count);
+    public GTRecipeBuilder inputItems(TagPrefix orePrefix, Material material, int count) {
+        TagKey<Item> tag = ChemicalHelper.getTag(orePrefix, material);
+        if (tag == null) {
+            return inputItems(ChemicalHelper.get(orePrefix, material, count));
+        }
+        return inputItems(tag, count);
     }
 
     public GTRecipeBuilder inputItems(MachineDefinition machine) {
@@ -353,6 +354,14 @@ public class GTRecipeBuilder {
         return output(FluidRecipeCapability.CAP, outputs);
     }
 
+    public GTRecipeBuilder inputStress(float stress) {
+        return input(StressRecipeCapability.CAP, stress);
+    }
+
+    public GTRecipeBuilder outputStress(float stress) {
+        return output(StressRecipeCapability.CAP, stress);
+    }
+
     //////////////////////////////////////
     //**********     DATA    ***********//
     //////////////////////////////////////
@@ -443,6 +452,14 @@ public class GTRecipeBuilder {
 
     public GTRecipeBuilder posY(int min, int max) {
         return posY(min, max, false);
+    }
+
+    public GTRecipeBuilder rpm(float rpm, boolean reverse) {
+        return addCondition(new RPMCondition(rpm).setReverse(reverse));
+    }
+
+    public GTRecipeBuilder rpm(float rpm) {
+        return rpm(rpm, false);
     }
 
     public void toJson(JsonObject json) {

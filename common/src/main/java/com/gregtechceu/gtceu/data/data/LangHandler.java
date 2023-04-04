@@ -3,7 +3,7 @@ package com.gregtechceu.gtceu.data.data;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.item.tool.GTToolType;
 import com.gregtechceu.gtceu.api.registry.GTRegistries;
-import com.gregtechceu.gtceu.api.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.common.data.GTCreativeModeTabs;
 import com.lowdragmc.lowdraglib.utils.LocalizationUtils;
 import com.tterrag.registrate.providers.RegistrateLangProvider;
@@ -13,7 +13,7 @@ import net.minecraft.network.chat.MutableComponent;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 
-import static com.gregtechceu.gtceu.utils.FormattingUtil.*;
+import static com.gregtechceu.gtceu.utils.FormattingUtil.toEnglishName;
 
 /**
  * @author KilaBash
@@ -58,6 +58,7 @@ public class LangHandler {
         provider.add("gtceu.gui.editor.group.recipe_type", "cap");
         provider.add("ldlib.gui.editor.register.project.rtui", "RecipeType UI Project");
         provider.add("ldlib.gui.editor.register.menu.recipe_type_tab", "recipe type");
+        provider.add("recipe.condition.rpm.tooltip", "RPM: %d");
         provider.add("recipe.condition.thunder.tooltip", "Thunder Level: %d");
         provider.add("recipe.condition.rain.tooltip", "Rain Level: %d");
         provider.add("recipe.condition.dimension.tooltip", "Dimension: %s");
@@ -718,14 +719,14 @@ public class LangHandler {
         provider.add("item.wood.dustSmall", "Small Pile of Wood Pulp");
         provider.add("item.wood.dust", "Wood Pulp");
         provider.add("item.wood.plate", "Wood Plank");
-        provider.add("item.wood.stickLong", "Long Wood Stick");
+        provider.add("item.wood.rodLong", "Long Wood Stick");
         provider.add("item.wood.bolt", "Short Wood Stick");
         provider.add("item.treated_wood.dustTiny", "Tiny Pile of Treated Wood Pulp");
         provider.add("item.treated_wood.dustSmall", "Small Pile of Treated Wood Pulp");
         provider.add("item.treated_wood.dust", "Treated Wood Pulp");
         provider.add("item.treated_wood.plate", "Treated Wood Plank");
-        provider.add("item.treated_wood.stick", "Treated Wood Stick");
-        provider.add("item.treated_wood.stickLong", "Long Treated Wood Stick");
+        provider.add("item.treated_wood.rod", "Treated Wood Stick");
+        provider.add("item.treated_wood.rodLong", "Long Treated Wood Stick");
         provider.add("item.treated_wood.bolt", "Short Treated Wood Stick");
         provider.add("item.glass.gem", "Glass Crystal");
         provider.add("item.glass.gemChipped", "Chipped Glass Crystal");
@@ -3090,6 +3091,10 @@ public class LangHandler {
         provider.add("gtceu.key.armor_charging", "Armor Charging to Inventory Toggle");
         provider.add("gtceu.key.tool_aoe_change", "Tool AoE Mode Switch");
         provider.add("gtceu.debug.f3_h.enabled", "GregTech has modified the debug info! For Developers: enable the misc:debug config option in the GregTech config file to see more");
+        provider.add("config.jade.plugin_gtceu.controllable_provider", "[GTCEu] Controllable");
+        provider.add("config.jade.plugin_gtceu.workable_provider", "[GTCEu] Workable");
+        provider.add("config.jade.plugin_gtceu.electric_container_provider", "[GTCEu] Electric Container");
+        provider.add("config.jade.plugin_gtceu.recipe_logic_provider", "[GTCEu] Recipe Logic");
     }
 
     /**
@@ -3101,7 +3106,8 @@ public class LangHandler {
      * <pre>
      * <code>
      * "terminal.fluid_prospector.tier.0"</code></pre>
-     * @param key Base key of the sub-key.
+     *
+     * @param key   Base key of the sub-key.
      * @param index Index of the sub-key.
      * @return Sub-key consisting of key and index.
      */
@@ -3126,9 +3132,10 @@ public class LangHandler {
      *                 .mapToObj(Integer::toString)
      *                 .map(i -> "radius size " + i)
      *                 .toArray(String[]::new));</code></pre>
+     *
      * @param provider The provider to add to.
-     * @param key Base key of the key-value-pairs. The real key for each translation will be appended by ".0" for the first, ".1" for the second, etc. This ensures that the keys are unique.
-     * @param values All translation values.
+     * @param key      Base key of the key-value-pairs. The real key for each translation will be appended by ".0" for the first, ".1" for the second, etc. This ensures that the keys are unique.
+     * @param values   All translation values.
      */
     private static void multiLang(RegistrateLangProvider provider, String key, String... values) {
         for (var i = 0; i < values.length; i++) {
@@ -3151,6 +3158,7 @@ public class LangHandler {
      * <code>radius size 1
      * radius size 2
      * radius size 3</code></pre>
+     *
      * @param key Base key of the multi lang. E.g. "terminal.fluid_prospector.tier".
      * @return Returns all translation components from a multi lang's sub-keys
      */
@@ -3180,6 +3188,7 @@ public class LangHandler {
      * <code>radius size 1
      * radius size 2
      * radius size 3</code></pre>
+     *
      * @param key Base key of the multi lang. E.g. "terminal.fluid_prospector.tier".
      * @return Returns all translation components from a multi lang's sub-keys.
      */
@@ -3196,7 +3205,8 @@ public class LangHandler {
 
     /**
      * Gets a single translation from a multi lang.
-     * @param key Base key of the multi lang. E.g. "gtceu.gui.overclock.enabled".
+     *
+     * @param key   Base key of the multi lang. E.g. "gtceu.gui.overclock.enabled".
      * @param index Index of the single translation. E.g. 3 would return "gtceu.gui.overclock.enabled.3".
      * @return Returns a single translation from a multi lang.
      */
@@ -3206,7 +3216,8 @@ public class LangHandler {
 
     /**
      * Gets a single translation from a multi lang. Supports additional arguments for the translation component.
-     * @param key Base key of the multi lang. E.g. "gtceu.gui.overclock.enabled".
+     *
+     * @param key   Base key of the multi lang. E.g. "gtceu.gui.overclock.enabled".
      * @param index Index of the single translation. E.g. 3 would return "gtceu.gui.overclock.enabled.3".
      * @return Returns a single translation from a multi lang.
      */
@@ -3223,8 +3234,9 @@ public class LangHandler {
      * <pre>
      * <code>"gtceu.gui.overclock.enabled.0": "Overclocking Enabled.",
      * "gtceu.gui.overclock.enabled.1": "Click to Disable",</code></pre>
-     * @param provider The provider to add to.
-     * @param key Base key of the key-value-pair. The real key for each line will be appended by ".0" for the first line, ".1" for the second, etc. This ensures that the keys are unique.
+     *
+     * @param provider  The provider to add to.
+     * @param key       Base key of the key-value-pair. The real key for each line will be appended by ".0" for the first line, ".1" for the second, etc. This ensures that the keys are unique.
      * @param multiline The multiline string. It is a multiline because it contains at least one newline character '\n'.
      */
     private static void multilineLang(RegistrateLangProvider provider, String key, String multiline) {

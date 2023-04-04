@@ -1,6 +1,6 @@
 package com.gregtechceu.gtceu.api.item.forge;
 
-import com.gregtechceu.gtceu.api.block.MetaMachineBlock;
+import com.gregtechceu.gtceu.api.block.IMachineBlock;
 import com.gregtechceu.gtceu.api.item.DrumMachineItem;
 import com.gregtechceu.gtceu.common.data.GTMachines;
 import net.minecraft.world.item.Item;
@@ -17,17 +17,23 @@ import org.jetbrains.annotations.NotNull;
  * @implNote DrumMachineItemImpl
  */
 public class DrumMachineItemImpl extends DrumMachineItem {
-    protected DrumMachineItemImpl(MetaMachineBlock block, Properties properties) {
+    protected DrumMachineItemImpl(IMachineBlock block, Properties properties) {
         super(block, properties);
     }
 
-    public static DrumMachineItem create(MetaMachineBlock block, Item.Properties properties) {
+    public static DrumMachineItem create(IMachineBlock block, Item.Properties properties) {
         return new DrumMachineItemImpl(block, properties);
     }
 
     public @NotNull <T> LazyOptional<T> getCapability(ItemStack itemStack, @NotNull Capability<T> cap) {
         if (cap == ForgeCapabilities.FLUID_HANDLER_ITEM) {
-            return ForgeCapabilities.FLUID_HANDLER_ITEM.orEmpty(cap, LazyOptional.of(() -> new FluidHandlerItemStack(itemStack, Math.toIntExact(GTMachines.DRUM_CAPACITY.get(getDefinition())))));
+            return ForgeCapabilities.FLUID_HANDLER_ITEM.orEmpty(cap, LazyOptional.of(
+                            () -> new FluidHandlerItemStack(
+                                    itemStack,
+                                    Math.toIntExact(GTMachines.DRUM_CAPACITY.get(getDefinition()))
+                            )
+                    )
+            );
         }
         return LazyOptional.empty();
     }
